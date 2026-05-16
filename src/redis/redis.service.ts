@@ -10,8 +10,8 @@ export class RedisService {
   constructor() {
 
     this.pubClient = new Redis({
-      host: '127.0.0.1',
-      port: 6380,
+      host:process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
     });
 
     this.subClient =

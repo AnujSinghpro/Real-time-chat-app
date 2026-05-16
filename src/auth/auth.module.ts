@@ -8,11 +8,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 
 import { UsersModule } from '../users/users.module';
 
+import { FileUploadModule } from '../file-upload/file-upload.module';
 @Module({
   imports: [
     UsersModule,
     PassportModule,
-
+    FileUploadModule,
     JwtModule.register({
       secret: 'SECRET_KEY',
       signOptions: {

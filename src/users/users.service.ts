@@ -23,5 +23,13 @@ export class UsersService {
     return this.userModel.findById(id);
   }
 
+  async update(userId: string, data: any) {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      data,
+      { new: true },
+    );
+  }
+
   
 }

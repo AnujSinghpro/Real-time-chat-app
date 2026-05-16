@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -8,15 +9,24 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { UsersService } from '../users/users.service';
+import { FileUploadService } from 'src/file-upload/file-upload.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private fileUploadService: FileUploadService,
   ) {}
 
-  async register(data: any) {
+  async register(data: any,
+    file: Express.Multer.File) {
+
+    let uploadedMedia;
+    if (file) {
+      uploadedMedia = await this.fileUploadService.uploadProfileImage(file);
+    }
+
     const existingUser = await this.usersService.findByEmail(
       data.email,
     );
@@ -35,6 +45,7 @@ export class AuthService {
     const user = await this.usersService.create({
       ...data,
       password: hashedPassword,
+      image: uploadedMedia || null,
     });
 
     return {
@@ -75,4 +86,47 @@ export class AuthService {
       user,
     };
   }
+
+
+
+  async updateProfileImage(
+    userId: string,
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException(
+        'Image is required',
+      );
+    }
+
+    const uploadedMedia =
+      await this.fileUploadService.uploadProfileImage(file);
+
+    const user =
+      await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException(
+        'User not found',
+      );
+    }
+
+    if (user.image) {
+      await this.fileUploadService.deleteProfileImage(
+        user.image,
+      );
+    }
+
+    const updatedUser =
+      await this.usersService.update(userId, {
+        image: uploadedMedia,
+      });
+
+    return {
+      message: 'Profile image updated successfully',
+      user: updatedUser,
+    };
+  }
+
+  
 }
