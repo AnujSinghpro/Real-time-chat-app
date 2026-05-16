@@ -36,7 +36,7 @@ Copy from .env.example
 mongod
 
 ### 5. Start Redis
-redis-server --port 6379
+redis-server --port 6380
 
 ### 6. Run project
 npm run start:dev
