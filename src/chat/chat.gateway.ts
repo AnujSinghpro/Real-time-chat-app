@@ -18,14 +18,14 @@ import { ChatService } from './chat.service';
 })
 export class ChatGateway
   implements
-    OnGatewayConnection,
-    OnGatewayDisconnect {
+  OnGatewayConnection,
+  OnGatewayDisconnect {
 
   @WebSocketServer()
   server: Server;
 
   users = new Map();
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService) { }
 
   handleConnection(client: Socket) {
 
@@ -42,13 +42,14 @@ export class ChatGateway
   }
 
   // JOIN USER
+  /* Expected Data:{ "userId": "6a080ded98..."} */
   @SubscribeMessage('join')
   handleJoin(
     @MessageBody() data: any,
     @ConnectedSocket() client: Socket,
   ) {
 
-  console.log('JOIN DATA:', data);
+    console.log('JOIN DATA:', data);
     this.users.set(
       data.userId,
       client.id,
@@ -63,17 +64,18 @@ export class ChatGateway
   }
 
   // ONE TO ONE MESSAGE
+  /* Expected Data:{ "senderId": "6a080ded98...", "receiverId":"6a080ded98...", "message":"hello"} */
   @SubscribeMessage('send-message')
   async sendMessage(
     @MessageBody() data: any,
   ) {
 
-    console.log("recever_id",data.receiverId);
+    console.log("recever_id", data.receiverId);
 
     const message =
-    await this.chatService
-      .savePrivateMessage(data);
-      
+      await this.chatService
+        .savePrivateMessage(data);
+
     this.server
       .to(data.receiverId)
       .emit(
@@ -82,16 +84,43 @@ export class ChatGateway
       );
   }
 
+  // CREATE GROUP 
+  /* Expected Data: { groupId: 'group1', groupName: 'Developers', members: ['user1', 'user2', 'user3'] } */
+  @SubscribeMessage('create-group')
+  async createGroup(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,) {
+    console.log('CREATE GROUP:', data,);
+    // OPTIONAL DATABASE SAVE //
+    await this.chatService.createGroup(data);
+    // JOIN ALL MEMBERS TO ROOM 
+    data.members.forEach(async (userId: string) => {
+      const socketId = this.users.get(userId);
+      if (socketId) {
+        const memberSocket = this.server.sockets.sockets.get(socketId,);
+        if (memberSocket) {
+          await memberSocket.join(data.groupId,);
+
+        }
+      }
+    },
+    );
+    this.server.emit('group-created', { groupId: data.groupId, groupName: data.groupName, members: data.members, },);
+    console.log(`Group Created: ${data.groupId}`,);
+  }
+
+
   // GROUP MESSAGE
+  /* Expected Data:{ "senderId": "6a080ded98...", "groupId":"group1", "message":"hello"} */
   @SubscribeMessage('group-message')
   async groupMessage(
     @MessageBody() data: any,
   ) {
 
 
-  const message =
-    await this.chatService
-      .saveGroupMessage(data);
+    const message =
+      await this.chatService
+        .saveGroupMessage(data);
 
     this.server
       .to(data.groupId)
@@ -100,6 +129,9 @@ export class ChatGateway
         message,
       );
   }
+
+
+
 
   // JOIN GROUP
   @SubscribeMessage('join-group')
@@ -111,7 +143,12 @@ export class ChatGateway
     client.join(data.groupId);
   }
 
+
+
+
+
   // TYPING
+  /* Expected Data:{ "receiverId": "6a080ded98..."} */
   @SubscribeMessage('typing')
   typing(
     @MessageBody() data: any,
@@ -125,14 +162,18 @@ export class ChatGateway
       );
   }
 
+
+
+
   // READ RECEIPT
+  /* Expected Data:{ "messageId": "6a080ded98..." , "senderId": "6a080ded98..."} */
   @SubscribeMessage('read-message')
   async readMessage(
     @MessageBody() data: any,
   ) {
 
-  await this.chatService
-    .markAsRead(data.messageId);
+    await this.chatService
+      .markAsRead(data.messageId);
 
     this.server
       .to(data.senderId)

@@ -5,6 +5,7 @@ import { ChatService } from './chat.service';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { MessageSchema, Message } from './schema/message.schema';
+import { GroupSchema, Group } from './schema/group.schema';
 
 @Module({
   
@@ -13,6 +14,11 @@ import { MessageSchema, Message } from './schema/message.schema';
       {
         name: Message.name,
         schema: MessageSchema,
+      },
+
+      {
+        name: Group.name,
+        schema: GroupSchema,
       },
     ]),
   ],

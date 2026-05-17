@@ -1,1 +1,4 @@
 The application follows a modular NestJS architecture with separation of concerns between Gateway (real-time communication), Service layer (business logic), and MongoDB (data persistence). Socket.IO is used for real-time messaging, and Redis is integrated using the Socket.IO Redis adapter for scaling across multiple server instances. File uploads are handled using Multer and stored locally (can be replaced with Cloudinary in production). The system prioritizes simplicity and scalability while maintaining clear separation between real-time events and database operations.
+
+
+ **/ For testing socket event expected input is given in chat.gateway /**
